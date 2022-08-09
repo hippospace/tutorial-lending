@@ -30,7 +30,7 @@ module hippo_tutorial::lend2 {
         borrow_amount: u64,
     }
 
-    #[method(check_borrow_within_limit, compute_borrow_deposit_value)]
+    #[method(check_borrow_within_limit, compute_borrow_deposit_value, user_get_limits)]
     struct User has key, store {
         deposits: iterable_table::IterableTable<u64, DepositPosition>,
         borrows: iterable_table::IterableTable<u64, BorrowPosition>,
@@ -42,7 +42,7 @@ module hippo_tutorial::lend2 {
         pool_index: table::Table<TypeInfo, u64>,
     }
 
-    #[cmd]
+    #[cmd(desc=b"Initialize protocol information (admin-only)")]
     public entry fun admin_init(admin: &signer) {
         assert!(address_of(admin) == @hippo_tutorial, 1000);
 
@@ -54,7 +54,7 @@ module hippo_tutorial::lend2 {
         })
     }
 
-    #[cmd]
+    #[cmd(desc=b"Create a new lending pool (admin-only)")]
     public entry fun admin_add_pool<CoinType>(admin: &signer, initial_price: u64) acquires LendingProtocol {
         assert!(address_of(admin) == @hippo_tutorial, 1000);
 
@@ -87,7 +87,7 @@ module hippo_tutorial::lend2 {
         table::add(&mut protocol.pool_index, type_of<CoinType>(), pool_id)
     }
 
-    #[cmd]
+    #[cmd(desc=b"Update price of a particular coin (admin-only)")]
     public entry fun admin_update_price<CoinType>(admin: &signer, price: u64) acquires LendingProtocol {
         assert!(address_of(admin) == @hippo_tutorial, 1000);
         let protocol = borrow_global_mut<LendingProtocol>(@hippo_tutorial);
@@ -107,7 +107,7 @@ module hippo_tutorial::lend2 {
         }
     }
 
-    #[cmd]
+    #[cmd(desc=b"Make a deposit into the CoinType pool. May create User if User does not already exist")]
     public entry fun deposit<CoinType>(
         user: &signer,
         amount: u64
@@ -130,7 +130,7 @@ module hippo_tutorial::lend2 {
         // no validation needed
     }
 
-    #[cmd]
+    #[cmd(desc=b"Withdraw from the CoinType pool. May fail if user exceeds borrow limit, or if he does not have enough deposit")]
     public entry fun withdraw<CoinType>(
         user: &signer,
         amount: u64,
@@ -152,7 +152,7 @@ module hippo_tutorial::lend2 {
         assert!(check_borrow_within_limit(user_assets, protocol), 4000);
     }
 
-    #[cmd]
+    #[cmd(desc=b"Borrow from the CoinType pool. May fail if user exceeds borrow limit.")]
     public entry fun borrow<CoinType>(
         user: &signer,
         amount: u64,
@@ -174,7 +174,7 @@ module hippo_tutorial::lend2 {
         assert!(check_borrow_within_limit(user_assets, protocol), 4000);
     }
 
-    #[cmd]
+    #[cmd(desc=b"Repay existing debt in the CoinType pool. May fail if user does not have such debt.")]
     public entry fun repay<CoinType>(
         user: &signer,
         amount: u64
