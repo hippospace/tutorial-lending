@@ -1,7 +1,23 @@
-# `move-to-ts`
-- automated Move-To-TypeScript generation
+# `move-to-ts`: TypeScript dev framework for Move
+Automatically generate TypeScript SDK from your Move contract:
 
-As web3 devs, we've probably wasted too many hours writing TypeScript SDKs.
+```typescript
+const client = new AptosClient(...);
+// Load auto-generated App
+const app = new App(client).hippo_tutorial.lend2;
+// addresses
+const userAddr = new HexString(...);
+const protocolAddr = app.moduleAddress;
+// load User struct from chain
+const user = await app.loadUser(userAddr);
+// load LendingProtocol struct from chain
+const protocol = await app.loadLendingProtocol(protocolAddr, false);
+// call user_get_limits to determine whether user needs to be liquidated, their borrowValue and depositValue
+const [isUserHealthy, totalBorrowValue, totalDepositValue] = user.user_get_limits(protocol);
+console.log(`isUserHealthy: ${isUserHealthy}`);
+console.log(`borrowValue: ${totalBorrowValue}`);
+console.log(`depositValue: ${totalDepositValue}`);
+```
 
 For example, DEX protocols usually implement their pricing logic in smart contracts, and then copy that logic to 
 TypeScript so that their frontend are able to make quotes on the spot as user is entering input amounts. That's 
