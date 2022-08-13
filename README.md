@@ -6,14 +6,12 @@ const {client, account} = ...;
 
 // Load auto-generated App
 const app = new App(client).hippo_tutorial.lend2;
-const userAddr = new HexString(...);
-const protocolAddr = app.moduleAddress;
 
 // load User and LendingProtocol struct from chain
-const user = await app.loadUser(userAddr);
-const protocol = await app.loadLendingProtocol(protocolAddr, false);
+const user = await app.loadUser(account.address());
+const protocol = await app.loadLendingProtocol(app.moduleAddress, false);
 
-// call user_get_limits to determine whether user needs to be liquidated, their borrowValue and depositValue
+// call user_get_limits to compute some info about user's state
 const [isUserHealthy, totalBorrowValue, totalDepositValue] = user.user_get_limits(protocol);
 console.log(isUserHealthy, totalBorrowValue, totalDepositValue);
 
@@ -38,9 +36,10 @@ If that is not the case, we recommend you go through [these](https://aptos.dev/)
 Now, let's get straight to business. In this guide, we will use a very naive lending protocol 
 ([github here](https://github.com/hippospace/tutorial-lending)) to demonstrate how to
 1. Automatically generate TypeScript SDK
-2. Generate CLI utility to interact with our contract
-3. Simulate arbitrary computation in Move, and fetch the execution result in TypeScript
-4. Execute Move code within JavaScript environment
+2. Use the generated `App` interface from your frontend/TypeScript application
+3. Generate CLI utility to interact with our contract
+4. Simulate arbitrary computation in Move, and fetch the execution result in TypeScript
+5. Execute Move code within JavaScript environment
 
 
 ## Step 1: Install `move-to-ts`
@@ -117,7 +116,45 @@ $ yarn install
 $ yarn build
 ```
 
-## Step 6: Use the CLI utility to fire transactions
+## Using the generated `App` interface
+
+```typescript
+import { App } from "path-to-generated-sdk";
+
+async function appDemo() {
+  const {client, account} = ...;
+  
+  // Load auto-generated App
+  const app = new App(client).hippo_tutorial.lend2;
+
+  // load User and LendingProtocol struct from chain
+  const user = await app.loadUser(account.address());
+  const protocol = await app.loadLendingProtocol(app.moduleAddress, false);
+
+  // call user_get_limits to compute some info about user's state
+  const [isUserHealthy, totalBorrowValue, totalDepositValue] = user.user_get_limits(protocol);
+  console.log(isUserHealthy, totalBorrowValue, totalDepositValue);
+
+  // make a withdrawal
+  await app.withdraw(account, u64(1000000), [app.FakeBTC.getTag()]);
+}
+```
+
+Using the `App` interface, you can:
+- Load on-chain state
+  - `app.loadStructName(ownerAddress, loadFull=true)`
+  - When `loadFull` is `true`, the loader will automatically load all `IterableTable` key-value pairs embedded in 
+    the `IterableTable`.
+  - Note that structs that contain the `aptos_std::table::Table` struct cannot be loaded in full since there is no 
+    easy way to enumearte all keys. If a struct contains an `aptos_std::table::Table`, you need to set `loadFull` to 
+    `false` otherwise execution will throw an error.
+- Execute functions written in Move
+- Build TransactionPayload (needed by frontend wallets)
+- Send transactions directly (useful in CLI)
+
+Details for above incoming...
+
+## Use the CLI utility to fire transactions
 ```bash
 $ yarn cli
 
@@ -174,7 +211,7 @@ $ yarn cli -c .aptos/config.yaml lend2:deposit COIN_TYPE_TAG coin_amount
 Where `.aptos/config.yaml` should contain your aptos account information (created via `aptos init`). You do need to 
 make sure that the account inside has been funded using `aptos account create --account ADDRESS --use-faucet`.
 
-## Step 7: Simulate onchain computation
+## Simulate onchain computation
 
 We have already deployed the toy lending contract to devnet and created a few test users using our devnet test coins.
 Inside our Move contract, we have a function that loops over the list of all users, and computes each user's borrow 
