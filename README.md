@@ -19,17 +19,13 @@ console.log(`borrowValue: ${totalBorrowValue}`);
 console.log(`depositValue: ${totalDepositValue}`);
 ```
 
-For example, DEX protocols usually implement their pricing logic in smart contracts, and then copy that logic to 
-TypeScript so that their frontend are able to make quotes on the spot as user is entering input amounts. That's 
-basically duplicated work. The same goes for lending protocols that need to implement their interest rate and borrow 
-limit checking logic twice, once in smart contract and once in TypeScript frontend.
+We have already written a naive lending protocol in Move. The above snippet demonstrates how you can use the 
+auto-generated TypeScript SDK to:
+- Load onchain data (`User` and `LendingProtocol`)
+- Directly call into functions written in Move 
+  ([user_get_limits](https://github.com/hippospace/tutorial-lending/blob/e4fba83e8da5e281df16005f2fe0e81658b3e32b/sources/lending.move#L325) 
+  is a Move function that computes a `User`'s total deposit and borrow values to determine if the user is "healthy")
 
-Can we get rid of that duplicate work, just write business logic once in our smart contract, and automatically generate 
-the equivalent TypeScript for our frontends?
-
-That's exactly why we built the [move-to-ts](https://github.com/hippospace/move-to-ts) transpiler. With `move-to-ts`, 
-Aptos/Move developers can forget about duplicating business logic, and just focus on building pretty frontends and 
-error-free smart contracts.
 
 Since this tutorial is targeted at Move developers, we assume that you are already familiar with the Move language.
 If that is not the case, we recommend you go through [these](https://aptos.dev/) learning resources first.
