@@ -2,7 +2,7 @@
 Automatically generate TypeScript SDK from your Move contract:
 
 ```typescript
-const client = new AptosClient(...);
+const {client, account} = ...;
 
 // Load auto-generated App
 const app = new App(client).hippo_tutorial.lend2;
@@ -15,17 +15,19 @@ const protocol = await app.loadLendingProtocol(protocolAddr, false);
 
 // call user_get_limits to determine whether user needs to be liquidated, their borrowValue and depositValue
 const [isUserHealthy, totalBorrowValue, totalDepositValue] = user.user_get_limits(protocol);
-console.log(`isUserHealthy: ${isUserHealthy}`);
-console.log(`borrowValue: ${totalBorrowValue}`);
-console.log(`depositValue: ${totalDepositValue}`);
+console.log(isUserHealthy, totalBorrowValue, totalDepositValue);
+
+// make a withdrawal
+await app.withdraw(account, u64(1000000), [app.FakeBTC.getTag()]);
 ```
 
-We have already written a naive lending protocol in Move. The above snippet demonstrates how you can use the 
+This guide includes a naive lending protocol implemented in Move. The above snippet demonstrates how you can use the 
 auto-generated TypeScript SDK to:
 - Load onchain data (`User` and `LendingProtocol`)
 - Directly call into functions written in Move 
   ([user_get_limits](https://github.com/hippospace/tutorial-lending/blob/e4fba83e8da5e281df16005f2fe0e81658b3e32b/sources/lending.move#L325) 
   is a Move function that computes a `User`'s total deposit and borrow values to determine if the user is "healthy")
+- Send transactions (withdraw 1000000 units of FakeBTC)
 
 
 Since this tutorial is targeted at Move developers, we assume that you are already familiar with the Move language.

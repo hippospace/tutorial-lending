@@ -41,19 +41,19 @@ program
   .option('-p, --profile <PROFILE>', 'aptos config profile to use', 'default')
 
 
-const check_user = async (userAddrStr: string) => {
-  const {client} = readConfig(program);
+const check_user = async () => {
+  const {client, account} = readConfig(program);
   const app = new App(client).hippo_tutorial.lend2;
-  const userAddr = new HexString(userAddrStr);
+  const userAddr = account.address();
   const protocolAddr = app.moduleAddress;
   const user = await app.loadUser(userAddr);
   const protocol = await app.loadLendingProtocol(protocolAddr, false);
   print(user.user_get_limits(protocol));
+  await app.withdraw(account, u64(1000000), [app.FakeBTC.getTag()]);
 }
 
 program
   .command("check-user")
-  .argument('<userAddr>')
   .action(check_user);
 
 program.parse();
