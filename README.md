@@ -3,15 +3,16 @@ Automatically generate TypeScript SDK from your Move contract:
 
 ```typescript
 const client = new AptosClient(...);
+
 // Load auto-generated App
 const app = new App(client).hippo_tutorial.lend2;
-// addresses
 const userAddr = new HexString(...);
 const protocolAddr = app.moduleAddress;
-// load User struct from chain
+
+// load User and LendingProtocol struct from chain
 const user = await app.loadUser(userAddr);
-// load LendingProtocol struct from chain
 const protocol = await app.loadLendingProtocol(protocolAddr, false);
+
 // call user_get_limits to determine whether user needs to be liquidated, their borrowValue and depositValue
 const [isUserHealthy, totalBorrowValue, totalDepositValue] = user.user_get_limits(protocol);
 console.log(`isUserHealthy: ${isUserHealthy}`);
