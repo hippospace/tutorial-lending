@@ -258,7 +258,7 @@ public entry fun get_all_users(initiator: &signer) acquires LendingProtocol, Use
 
 Now, above might seem a bit weird: in an ordinary lending protocol, there can be hundreds of thousands of users and 
 we usually use indexer data and off-chain scripts to identify the set of users that are eligible for liquidation. 
-Why would anyone want to write that code in the smart contract itself? It would be way to expensive to execute anyway!
+Why would anyone want to write that code in the smart contract itself? It would be way too expensive to execute anyway!
 
 Well, the function above would be very expensive indeed, unless it is run in simulation mode. We have recently 
 introduced the 
@@ -447,5 +447,5 @@ uses the following code:
   await sendPayloadTx(client, account, payload);
 ```
 
-You just need to adapt the last line to be used with your frontend's wallet or wallet-adapter. (we're building a 
-wallet adapter to streamline all of these!)
+You just need to adapt the last line to be used with your frontend's wallet or wallet-adapter — We're building a 
+wallet adapter to streamline all of these!
