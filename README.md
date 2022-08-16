@@ -105,7 +105,7 @@ $ ls src -l
   drwxrwxr-x 2 mana mana 4096 Aug  9 15:10 std
 ```
 
-We see that there is one folder for each of the packages that our project depends on (`aptos_framework`, `aptos_std`
+We see there is one folder for each of the packages that our project depends on (`aptos_framework`, `aptos_std`
 and `std`), and one folder for our own package `hippo_tutorial`. You may examine the content of these files to see 
 how our Move code is translated to TypeScript.
 
@@ -214,7 +214,7 @@ make sure that the account inside has been funded using `aptos account create --
 ## Simulate onchain computation
 
 We have already deployed the toy lending contract to devnet and created a few test users using our devnet test coins.
-Inside our Move contract, we have a function that loops over the list of all users, and computes each user's borrow 
+Inside our Move contract, we have a function that loops over the list of all users, computing each user's borrow 
 limit to see if they can be liquidated:
 
 ```Move
@@ -434,7 +434,7 @@ struct User has key, store {
 
 ## Transaction Builder
 
-Of course, how is a TS SDK complete without transaction builders! While our generated CLI utility can help you fire 
+Of course, how is a TS SDK complete without transaction builders? While our generated CLI utility can help you fire 
 transactions directly from the commandline, in frontends what we really need is a convenient way to construct 
 transaction payloads. The generated payload would then be signed and submitted by wallets.
 
