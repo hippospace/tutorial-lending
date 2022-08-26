@@ -404,42 +404,52 @@ module hippo_tutorial::lend2 {
         usdc_coin: Coin<FakeUSDC>,
         usdt_coin: Coin<FakeUSDT>,
 
-        btc_cap: coin::MintCapability<FakeBTC>,
-        eth_cap: coin::MintCapability<FakeETH>,
-        usdc_cap: coin::MintCapability<FakeUSDC>,
-        usdt_cap: coin::MintCapability<FakeUSDT>,
-
         btc_burn: coin::BurnCapability<FakeBTC>,
         eth_burn: coin::BurnCapability<FakeETH>,
         usdc_burn: coin::BurnCapability<FakeUSDC>,
         usdt_burn: coin::BurnCapability<FakeUSDT>,
+
+        btc_freeze: coin::FreezeCapability<FakeBTC>,
+        eth_freeze: coin::FreezeCapability<FakeETH>,
+        usdc_freeze: coin::FreezeCapability<FakeUSDC>,
+        usdt_freeze: coin::FreezeCapability<FakeUSDT>,
+
+        btc_mint: coin::MintCapability<FakeBTC>,
+        eth_mint: coin::MintCapability<FakeETH>,
+        usdc_mint: coin::MintCapability<FakeUSDC>,
+        usdt_mint: coin::MintCapability<FakeUSDT>,
     }
 
     #[cmd]
     public entry fun init_fake_pools(admin: &signer) acquires LendingProtocol {
         use std::string;
         let name = string::utf8(b"name");
-        let (btc_cap, btc_burn) = coin::initialize<FakeBTC>(admin, copy name, copy name, 0, false);
-        let (eth_cap, eth_burn) = coin::initialize<FakeETH>(admin, copy name, copy name, 0, false);
-        let (usdc_cap, usdc_burn) = coin::initialize<FakeUSDC>(admin, copy name, copy name, 0, false);
-        let (usdt_cap, usdt_burn) = coin::initialize<FakeUSDT>(admin, copy name, copy name, 0, false);
+        let (btc_burn, btc_freeze, btc_mint) = coin::initialize<FakeBTC>(admin, copy name, copy name, 0, false);
+        let (eth_burn, eth_freeze, eth_mint) = coin::initialize<FakeETH>(admin, copy name, copy name, 0, false);
+        let (usdc_burn, usdc_freeze, usdc_mint) = coin::initialize<FakeUSDC>(admin, copy name, copy name, 0, false);
+        let (usdt_burn, usdt_freeze, usdt_mint) = coin::initialize<FakeUSDT>(admin, copy name, copy name, 0, false);
 
         let mint_amount = 1000000000000;
         move_to(admin, FreeCoins {
-            btc_coin: coin::mint(mint_amount, &btc_cap),
-            eth_coin: coin::mint(mint_amount, &eth_cap),
-            usdc_coin: coin::mint(mint_amount, &usdc_cap),
-            usdt_coin: coin::mint(mint_amount, &usdt_cap),
-
-            btc_cap,
-            eth_cap,
-            usdc_cap,
-            usdt_cap,
+            btc_coin: coin::mint(mint_amount, &btc_mint),
+            eth_coin: coin::mint(mint_amount, &eth_mint),
+            usdc_coin: coin::mint(mint_amount, &usdc_mint),
+            usdt_coin: coin::mint(mint_amount, &usdt_mint),
 
             btc_burn,
             eth_burn,
             usdc_burn,
             usdt_burn,
+
+            btc_freeze,
+            eth_freeze,
+            usdc_freeze,
+            usdt_freeze,
+
+            btc_mint,
+            eth_mint,
+            usdc_mint,
+            usdt_mint,
         });
 
         admin_init(admin);
