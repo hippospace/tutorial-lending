@@ -49,11 +49,38 @@ const check_user = async () => {
   const user = await app.loadUser(userAddr);
   const protocol = await app.loadLendingProtocol(protocolAddr, false);
   print(user.user_get_limits(protocol));
+  // send tx
   await app.withdraw(account, u64(1000000), [app.FakeBTC.getTag()]);
 }
 
 program
   .command("check-user")
   .action(check_user);
+
+
+const check_user_global = async () => {
+  const {client, account} = readConfig(program);
+  const app = new App(client).hippo_tutorial.lend2;
+  const userAddr = account.address();
+  await app.loadUser(userAddr);
+  await app.loadLendingProtocol(app.moduleAddress, false, true);
+  print(app.app_global_get_user_limits(userAddr));
+}
+
+program
+  .command("check-user-global")
+  .action(check_user_global);
+
+
+const check_user_async = async () => {
+  const {client, account} = readConfig(program);
+  const app = new App(client).hippo_tutorial.lend2;
+  const userAddr = account.address();
+  print(await app.app_global_get_user_limits(userAddr));
+}
+
+program
+  .command("check-user-async")
+  .action(check_user_async);
 
 program.parse();

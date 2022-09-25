@@ -327,6 +327,13 @@ module hippo_tutorial::lend2 {
         (borrow_value * 100 < deposit_value * 90, borrow_value, deposit_value)
     }
 
+    #[app]
+    public fun global_get_user_limits(user: address): (bool, u64, u64) acquires User, LendingProtocol {
+        let user = borrow_global<User>(user);
+        let protocol = borrow_global<LendingProtocol>(@hippo_tutorial);
+        user_get_limits(user, protocol)
+    }
+
     struct UserInfo has key, store {
         address: address,
         deposits: vector<DepositPosition>,
