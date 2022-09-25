@@ -1,12 +1,10 @@
 module hippo_tutorial::lend2 {
-    use aptos_std::iterable_table;
+    use hippo_tutorial::simple_map;
     use aptos_std::table;
     use aptos_std::type_info::{TypeInfo, type_of};
     use std::vector;
-    use std::option;
     use std::signer::address_of;
     use aptos_framework::coin::{Self, Coin};
-    use aptos_framework::coins;
 
     struct LendingPoolReserve<phantom CoinType> has key {
         reserve: Coin<CoinType>,
@@ -32,8 +30,8 @@ module hippo_tutorial::lend2 {
 
     #[method(check_borrow_within_limit, compute_borrow_deposit_value, user_get_limits)]
     struct User has key, store {
-        deposits: iterable_table::IterableTable<u64, DepositPosition>,
-        borrows: iterable_table::IterableTable<u64, BorrowPosition>,
+        deposits: simple_map::SimpleMap<u64, DepositPosition>,
+        borrows: simple_map::SimpleMap<u64, BorrowPosition>,
     }
 
     struct LendingProtocol has key, store {
@@ -101,8 +99,8 @@ module hippo_tutorial::lend2 {
         if (!exists<User>(address_of(user))) {
             vector::push_back(&mut protocol.users, address_of(user));
             move_to(user, User {
-                deposits: iterable_table::new<u64, DepositPosition>(),
-                borrows: iterable_table::new<u64, BorrowPosition>(),
+                deposits: simple_map::create<u64, DepositPosition>(),
+                borrows: simple_map::create<u64, BorrowPosition>(),
             })
         }
     }
@@ -145,7 +143,7 @@ module hippo_tutorial::lend2 {
 
         let coin = make_withdrawal<CoinType>(user_assets, pool, amount, reserve);
         if (!coin::is_account_registered<CoinType>(address_of(user))) {
-            coins::register_internal<CoinType>(user);
+            coin::register<CoinType>(user);
         };
         coin::deposit(address_of(user), coin);
 
@@ -167,7 +165,7 @@ module hippo_tutorial::lend2 {
 
         let coin = make_borrow<CoinType>(user_assets, pool, amount, reserve);
         if (!coin::is_account_registered<CoinType>(address_of(user))) {
-            coins::register_internal<CoinType>(user);
+            coin::register<CoinType>(user);
         };
         coin::deposit(address_of(user), coin);
 
@@ -211,15 +209,15 @@ module hippo_tutorial::lend2 {
         // update pool number
         pool.total_deposit = pool.total_deposit + amount;
         // update user number
-        if (!iterable_table::contains(&user.deposits, pool_id)) {
+        if (!simple_map::contains_key(&user.deposits, &pool_id)) {
             // create DepositPosition
-            iterable_table::add(&mut user.deposits, pool_id, DepositPosition {
+            simple_map::add(&mut user.deposits, pool_id, DepositPosition {
                 pool_id,
                 deposit_amount: amount,
             })
         }
         else {
-            let position = iterable_table::borrow_mut(&mut user.deposits, pool_id);
+            let position = simple_map::borrow_mut(&mut user.deposits, &pool_id);
             position.deposit_amount = position.deposit_amount + amount;
         }
     }
@@ -237,7 +235,7 @@ module hippo_tutorial::lend2 {
         // update pool number
         pool.total_deposit = pool.total_deposit - amount;
         // update user number
-        let position = iterable_table::borrow_mut(&mut user.deposits, pool_id);
+        let position = simple_map::borrow_mut(&mut user.deposits, &pool_id);
         position.deposit_amount = position.deposit_amount - amount;
 
         coin
@@ -256,15 +254,15 @@ module hippo_tutorial::lend2 {
         // update pool number
         pool.total_borrow = pool.total_borrow + amount;
         // update user number
-        if (!iterable_table::contains(&user.borrows, pool_id)) {
+        if (!simple_map::contains_key(&user.borrows, &pool_id)) {
             // create DepositPosition
-            iterable_table::add(&mut user.borrows, pool_id, BorrowPosition {
+            simple_map::add(&mut user.borrows, pool_id, BorrowPosition {
                 pool_id,
                 borrow_amount: amount,
             })
         }
         else {
-            let position = iterable_table::borrow_mut(&mut user.borrows, pool_id);
+            let position = simple_map::borrow_mut(&mut user.borrows, &pool_id);
             position.borrow_amount = position.borrow_amount + amount;
         };
 
@@ -285,31 +283,31 @@ module hippo_tutorial::lend2 {
         // update pool number
         pool.total_borrow = pool.total_borrow - amount;
         // update user number
-        let position = iterable_table::borrow_mut(&mut user.borrows, pool_id);
+        let position = simple_map::borrow_mut(&mut user.borrows, &pool_id);
         position.borrow_amount = position.borrow_amount - amount;
     }
 
     public fun compute_borrow_deposit_value(user: &User, protocol: &LendingProtocol): (u64, u64) {
         let deposit_value = 0u64;
-        let deposit_tail = iterable_table::tail_key(&user.deposits);
-        while (option::is_some(&deposit_tail)) {
-            let pool_id = *option::borrow(&deposit_tail);
-            let (position, prev, _) = iterable_table::borrow_iter(&user.deposits, pool_id);
-            let pool = vector::borrow(&protocol.pools, pool_id);
-            let value = position.deposit_amount * pool.coin_price;
+        let index = 0;
+        let length = simple_map::length(&user.deposits);
+        while (index < length) {
+            let deposit = simple_map::borrow_by_index(&user.deposits, index);
+            let pool = vector::borrow(&protocol.pools, deposit.pool_id);
+            let value = deposit.deposit_amount * pool.coin_price;
             deposit_value = deposit_value + value;
-            deposit_tail = prev;
+            index = index + 1;
         };
 
         let borrow_value = 0u64;
-        let borrow_tail = iterable_table::tail_key(&user.borrows);
-        while (option::is_some(&borrow_tail)) {
-            let pool_id = *option::borrow(&borrow_tail);
-            let (position, prev, _) = iterable_table::borrow_iter(&user.borrows, pool_id);
-            let pool = vector::borrow(&protocol.pools, pool_id);
-            let value = position.borrow_amount * pool.coin_price;
+        index = 0;
+        length = simple_map::length(&user.borrows);
+        while (index < length) {
+            let borrow = simple_map::borrow_by_index(&user.borrows, index);
+            let pool = vector::borrow(&protocol.pools, borrow.pool_id);
+            let value = borrow.borrow_amount * pool.coin_price;
             borrow_value = borrow_value + value;
-            borrow_tail = prev;
+            index = index + 1;
         };
 
         (borrow_value, deposit_value)
@@ -343,16 +341,16 @@ module hippo_tutorial::lend2 {
         unhealthy_users: vector<UserInfo>,
     }
 
-    public fun get_values<K: copy + store + drop, V: store + copy>(table: &iterable_table::IterableTable<K, V>):
+    public fun get_values<K: copy + store + drop, V: store + copy>(table: &simple_map::SimpleMap<K, V>):
     vector<V> {
         let list = vector::empty<V>();
 
-        let tail = iterable_table::tail_key(table);
-        while (option::is_some(&tail)) {
-            let key = *option::borrow(&tail);
-            let (value, prev, _) = iterable_table::borrow_iter(table, key);
+        let index = 0;
+        let length = simple_map::length(table);
+        while (index < length) {
+            let value = simple_map::borrow_by_index(table, index);
             vector::push_back(&mut list, *value);
-            tail = prev;
+            index = index + 1;
         };
 
         list
@@ -413,16 +411,21 @@ module hippo_tutorial::lend2 {
         eth_burn: coin::BurnCapability<FakeETH>,
         usdc_burn: coin::BurnCapability<FakeUSDC>,
         usdt_burn: coin::BurnCapability<FakeUSDT>,
+
+        btc_freeze: coin::FreezeCapability<FakeBTC>,
+        eth_freeze: coin::FreezeCapability<FakeETH>,
+        usdc_freeze: coin::FreezeCapability<FakeUSDC>,
+        usdt_freeze: coin::FreezeCapability<FakeUSDT>,
     }
 
     #[cmd]
     public entry fun init_fake_pools(admin: &signer) acquires LendingProtocol {
         use std::string;
         let name = string::utf8(b"name");
-        let (btc_cap, btc_burn) = coin::initialize<FakeBTC>(admin, copy name, copy name, 0, false);
-        let (eth_cap, eth_burn) = coin::initialize<FakeETH>(admin, copy name, copy name, 0, false);
-        let (usdc_cap, usdc_burn) = coin::initialize<FakeUSDC>(admin, copy name, copy name, 0, false);
-        let (usdt_cap, usdt_burn) = coin::initialize<FakeUSDT>(admin, copy name, copy name, 0, false);
+        let (btc_burn, btc_freeze, btc_cap) = coin::initialize<FakeBTC>(admin, copy name, copy name, 0, false);
+        let (eth_burn, eth_freeze, eth_cap) = coin::initialize<FakeETH>(admin, copy name, copy name, 0, false);
+        let (usdc_burn, usdc_freeze, usdc_cap) = coin::initialize<FakeUSDC>(admin, copy name, copy name, 0, false);
+        let (usdt_burn, usdt_freeze, usdt_cap) = coin::initialize<FakeUSDT>(admin, copy name, copy name, 0, false);
 
         let mint_amount = 1000000000000;
         move_to(admin, FreeCoins {
@@ -440,6 +443,11 @@ module hippo_tutorial::lend2 {
             eth_burn,
             usdc_burn,
             usdt_burn,
+
+            btc_freeze,
+            eth_freeze,
+            usdc_freeze,
+            usdt_freeze,
         });
 
         admin_init(admin);
@@ -456,10 +464,10 @@ module hippo_tutorial::lend2 {
     }
 
     fun init_coin_stores(user: &signer) acquires FreeCoins {
-        coins::register_internal<FakeBTC>(user);
-        coins::register_internal<FakeETH>(user);
-        coins::register_internal<FakeUSDC>(user);
-        coins::register_internal<FakeUSDT>(user);
+        coin::register<FakeBTC>(user);
+        coin::register<FakeETH>(user);
+        coin::register<FakeUSDC>(user);
+        coin::register<FakeUSDT>(user);
         let faucet_amount = 1000000000;
         let free_coins = borrow_global_mut<FreeCoins>(@hippo_tutorial);
         let btc = coin::extract(&mut free_coins.btc_coin, faucet_amount);
@@ -504,10 +512,10 @@ module hippo_tutorial::lend2 {
     #[test_only]
     fun test_init(admin: &signer, user1: &signer, user2: &signer, user3: &signer) acquires FreeCoins, LendingPoolReserve, LendingProtocol, User  {
         use aptos_framework::account;
-        account::create_account(address_of(admin));
-        account::create_account(address_of(user1));
-        account::create_account(address_of(user2));
-        account::create_account(address_of(user3));
+        account::create_account_for_test(address_of(admin));
+        account::create_account_for_test(address_of(user1));
+        account::create_account_for_test(address_of(user2));
+        account::create_account_for_test(address_of(user3));
         init_fake_pools(admin);
         create_fake_user1(user1);
         create_fake_user2(user2);

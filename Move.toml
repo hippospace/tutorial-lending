@@ -3,8 +3,8 @@ name = "LendingTutorial"
 version = "0.0.1"
 
 [dependencies]
-AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "3910637893b6aed4af73b19a2c429ef717e1ee26" }
-AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "3910637893b6aed4af73b19a2c429ef717e1ee26" }
+AptosFramework = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-framework/", rev = "795fffb779fc5e321e21d2b95b8f9946c9215af6" }
+AptosStdlib = { git = "https://github.com/aptos-labs/aptos-core.git", subdir = "aptos-move/framework/aptos-stdlib/", rev = "795fffb779fc5e321e21d2b95b8f9946c9215af6" }
 
 [addresses]
 hippo_tutorial = "a61e1e86e9f596e483283727d2739ba24b919012720648c29380f9cd0a96c11a"
